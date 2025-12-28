@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, 
@@ -14,7 +15,8 @@ import {
   ArrowLeft,
   AlertCircle,
   History,
-  Key
+  Key,
+  AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArchiveFile, ArchiveImage, ViewMode } from './types.ts';
@@ -35,6 +37,9 @@ const App: React.FC = () => {
   const [password, setPassword] = useState('');
   const [initError, setInitError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Delete Confirmation State
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -167,21 +172,26 @@ const App: React.FC = () => {
     }
   };
 
-  const deleteFile = async (id: string, e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
+  const requestDelete = (id: string, e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm('Permanently delete this archive from your private vault?')) {
-      try {
-        await deleteArchive(id);
-        if (activeFile?.id === id) {
-          setActiveFile(null);
-          setCurrentImages([]);
-        }
-        await loadVault();
-      } catch (err) {
-        console.error("Delete failed:", err);
-        alert("Failed to delete file from storage.");
+    setDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await deleteArchive(deleteId);
+      if (activeFile?.id === deleteId) {
+        setActiveFile(null);
+        setCurrentImages([]);
       }
+      await loadVault();
+    } catch (err) {
+      console.error("Delete failed:", err);
+      alert("Failed to delete file from storage.");
+    } finally {
+      setDeleteId(null);
     }
   };
 
@@ -344,7 +354,7 @@ const App: React.FC = () => {
                           type="button"
                           onPointerDown={(e) => e.stopPropagation()}
                           onTouchStart={(e) => e.stopPropagation()}
-                          onClick={(e) => deleteFile(file.id, e)}
+                          onClick={(e) => requestDelete(file.id, e)}
                           className="p-3 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-2xl transition-colors bg-white/10 z-20"
                           title="Delete archive"
                         >
@@ -472,6 +482,7 @@ const App: React.FC = () => {
       </main>
 
       <AnimatePresence>
+        {/* Password Dialog */}
         {showPasswordDialog && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-md">
             <motion.div 
@@ -509,6 +520,43 @@ const App: React.FC = () => {
                   className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-colors text-sm shadow-lg shadow-indigo-600/20"
                 >
                   Unlock
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        {deleteId && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="w-full max-w-sm bg-slate-900 border border-white/10 rounded-[2rem] p-8 space-y-6 shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-red-500 to-orange-500" />
+              <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto text-red-400">
+                <AlertTriangle size={32} />
+              </div>
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-bold">Delete Archive?</h2>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  This action cannot be undone. The file will be permanently removed from your private vault.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setDeleteId(null)}
+                  className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmDelete}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-500 rounded-xl font-bold transition-colors text-sm shadow-lg shadow-red-600/20"
+                >
+                  Delete
                 </button>
               </div>
             </motion.div>
