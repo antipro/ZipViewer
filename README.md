@@ -8,53 +8,89 @@ A secure, offline-first web application for viewing images directly from encrypt
 - **Mobile Optimized**: Smooth pinch-to-zoom, panning, and swipe navigation.
 - **Desktop Ready**: Keyboard shortcuts and high-performance rendering.
 
-## Mobile APK Build Instructions
+## Mobile APK Build Instructions (No NPM Dependencies)
 
-To package this application as a native Android APK, we use **Capacitor**.
+This method uses a standard Android Studio project to wrap your web code. It requires no changes to your web project's configuration and keeps the build process completely separate.
 
-### 1. Prerequisites
-- **Node.js & pnpm**: Ensure both are installed.
-- **Android Studio**: If on Mac M1/M2/M3, download the **"Apple Chip"** version.
-- **JDK**: For Apple Silicon, use an ARM64 JDK (e.g., `brew install --cask zulu`).
+### 1. Prepare Your Web Assets
+Ensure your web application is compiled into standard HTML/JS/CSS.
+* **Important**: Android WebViews cannot natively execute `.tsx` or JSX files. You must transpile your code (e.g., `vite build`, `tsc`, or `esbuild`) before packaging.
+* **Offline Support**: If you want the app to work offline, you must download the dependencies currently loaded from `esm.sh` in `index.html` and link them locally.
 
-### 2. Setup Capacitor
-Install the necessary dependencies:
-```bash
-pnpm add @capacitor/core @capacitor/android
-pnpm add -D @capacitor/cli
+### 2. Create Android Project
+1. Open **Android Studio**.
+2. Select **New Project** > **Empty Views Activity**.
+3. Name: `ZipViewer`.
+4. Package Name: `com.bitifyware.zipviewer`.
+5. Language: **Kotlin**.
+
+### 3. Configure Android Dependencies
+Open `app/build.gradle.kts` (Module: app) and add the **WebKit** dependency to the `dependencies` block. This library allows us to serve local files securely.
+
+```kotlin
+dependencies {
+    // ... existing dependencies
+    implementation("androidx.webkit:webkit:1.12.0")
+}
+```
+Click **Sync Now** in the top right corner.
+
+### 4. Setup WebView in MainActivity
+Open `app/src/main/java/com/bitifyware/zipviewer/MainActivity.kt`.
+Replace the entire file content with the following code. This sets up a `WebViewAssetLoader` to serve your files from a virtual domain (`https://appassets.androidplatform.net`), which is required to make ES Modules and CORS work correctly in a local APK.
+
+```kotlin
+package com.bitifyware.zipviewer
+
+import android.os.Bundle
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.appcompat.app.AppCompatActivity
+import androidx.webkit.WebViewAssetLoader
+
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        // Initialize WebView
+        val webView = WebView(this)
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true // Required for IndexedDB
+        
+        // Setup Asset Loader to serve files from 'assets' folder via a virtual URL.
+        // This creates a virtual domain https://appassets.androidplatform.net/assets/
+        val assetLoader = WebViewAssetLoader.Builder()
+            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+            .build()
+
+        // Intercept requests to serve local files
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(
+                view: WebView,
+                request: WebResourceRequest
+            ): WebResourceResponse? {
+                return assetLoader.shouldInterceptRequest(request.url)
+            }
+        }
+
+        setContentView(webView)
+        
+        // Load the index.html from the virtual domain
+        webView.loadUrl("https://appassets.androidplatform.net/assets/index.html")
+    }
+}
 ```
 
-### 3. Initialize the Project
-Initialize Capacitor with your app's details:
-```bash
-pnpm dlx cap init "ZipViewer" "com.bitifyware.zipviewer" --web-dir "."
-```
+### 5. Add Web Files
+1. In Android Studio, right-click the `app/src/main` folder in the Project view.
+2. Select **New** > **Folder** > **Assets Folder**.
+3. Click **Finish**.
+4. Copy your **compiled** web files (index.html, .js bundles, css) into `app/src/main/assets/`.
 
-### 4. Build and Add Android
-Add the Android platform to your project:
-```bash
-pnpm dlx cap add android
-```
-
-### 5. Sync and Open
-Every time you make changes to the web code, run:
-```bash
-pnpm dlx cap sync
-pnpm dlx cap open android
-```
-
-### 6. Compile the APK
-Once Android Studio is open:
-1. Wait for Gradle to finish syncing (M1 chips handle this very quickly).
-2. Go to **Build** > **Build Bundle(s) / APK(s)** > **Build APK(s)**.
-3. Android Studio will generate the `.apk` file and provide a link to the folder containing it.
-
-### macOS M1/Apple Silicon Tips
-- **Fast Emulators**: When creating a Virtual Device (Emulator), ensure you select an **arm64-v8a** system image. These run natively on your CPU and are much faster than x86 images.
-- **Environment Variables**: Ensure your `JAVA_HOME` and `ANDROID_HOME` are correctly set in your `.zshrc` or `.bash_profile`.
-
-### Android Manifest (Optional)
-To register as a system-level ZIP editor, add the following Intent Filter to your `android/app/src/main/AndroidManifest.xml` inside the `<activity>` tag:
+### 6. Android Manifest (Optional)
+To register the app as a generic File Viewer (so it appears in "Open With" menus), add this `<intent-filter>` to `app/src/main/AndroidManifest.xml` inside the `<activity>` tag:
 
 ```xml
 <intent-filter>
@@ -62,11 +98,15 @@ To register as a system-level ZIP editor, add the following Intent Filter to you
     <category android:name="android.intent.category.DEFAULT" />
     <category android:name="android.intent.category.BROWSABLE" />
     <data android:scheme="content" />
-    <data android:host="*" />
     <data android:mimeType="application/zip" />
     <data android:mimeType="application/x-zip-compressed" />
+    <data android:mimeType="application/x-rar-compressed" />
 </intent-filter>
 ```
+
+### 7. Build APK
+Go to **Build** > **Build Bundle(s) / APK(s)** > **Build APK(s)**.
+Android Studio will generate the APK file which you can transfer to your device.
 
 ## Security Note
 This app uses browser-based encryption and local storage. While highly private, the security of your files ultimately depends on your device's security and the strength of your archive passwords.
