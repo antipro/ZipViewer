@@ -1,7 +1,5 @@
 {
   "name": "ZipViewer - Private Archive Viewer",
-  "description": "A secure and private image viewer for ZIP, RAR, and 7Z archives. Supports encrypted files, internal storage, and advanced image manipulation with a focus on privacy.",
-  "requestFramePermissions": [
-    "camera"
-  ]
+  "description": "A secure and private image viewer for ZIP, RAR, and 7Z archives. Supports encrypted files and local internal storage.",
+  "requestFramePermissions": []
 }

@@ -1,4 +1,3 @@
-
 # ZipViewer - Private Archive Viewer
 
 A secure, offline-first web application for viewing images directly from encrypted ZIP, RAR, and 7Z archives.
@@ -14,7 +13,9 @@ A secure, offline-first web application for viewing images directly from encrypt
 To package this application as a native Android APK, we use **Capacitor**.
 
 ### 1. Prerequisites
-Ensure you have [Node.js](https://nodejs.org/) and [pnpm](https://pnpm.io/) installed.
+- **Node.js & pnpm**: Ensure both are installed.
+- **Android Studio**: If on Mac M1/M2/M3, download the **"Apple Chip"** version.
+- **JDK**: For Apple Silicon, use an ARM64 JDK (e.g., `brew install --cask zulu`).
 
 ### 2. Setup Capacitor
 Install the necessary dependencies:
@@ -44,9 +45,13 @@ pnpm dlx cap open android
 
 ### 6. Compile the APK
 Once Android Studio is open:
-1. Wait for Gradle to finish syncing.
+1. Wait for Gradle to finish syncing (M1 chips handle this very quickly).
 2. Go to **Build** > **Build Bundle(s) / APK(s)** > **Build APK(s)**.
 3. Android Studio will generate the `.apk` file and provide a link to the folder containing it.
+
+### macOS M1/Apple Silicon Tips
+- **Fast Emulators**: When creating a Virtual Device (Emulator), ensure you select an **arm64-v8a** system image. These run natively on your CPU and are much faster than x86 images.
+- **Environment Variables**: Ensure your `JAVA_HOME` and `ANDROID_HOME` are correctly set in your `.zshrc` or `.bash_profile`.
 
 ### Android Manifest (Optional)
 To register as a system-level ZIP editor, add the following Intent Filter to your `android/app/src/main/AndroidManifest.xml` inside the `<activity>` tag:

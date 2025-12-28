@@ -217,14 +217,14 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ images, initialIndex, onClose
           <>
             <button 
               onClick={(e) => { e.stopPropagation(); handlePrev(); }}
-              className="absolute left-3 sm:left-6 z-[105] p-3 sm:p-4 bg-black/40 hover:bg-black/60 active:scale-90 rounded-full text-white transition-all backdrop-blur-md border border-white/10"
+              className="hidden sm:block absolute left-3 sm:left-6 z-[105] p-3 sm:p-4 bg-black/40 hover:bg-black/60 active:scale-90 rounded-full text-white transition-all backdrop-blur-md border border-white/10"
               aria-label="Previous image"
             >
               <ChevronLeft size={28} />
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); handleNext(); }}
-              className="absolute right-3 sm:right-6 z-[105] p-3 sm:p-4 bg-black/40 hover:bg-black/60 active:scale-90 rounded-full text-white transition-all backdrop-blur-md border border-white/10"
+              className="hidden sm:block absolute right-3 sm:right-6 z-[105] p-3 sm:p-4 bg-black/40 hover:bg-black/60 active:scale-90 rounded-full text-white transition-all backdrop-blur-md border border-white/10"
               aria-label="Next image"
             >
               <ChevronRight size={28} />

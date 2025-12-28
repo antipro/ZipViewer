@@ -5,7 +5,8 @@ export interface ArchiveFile {
   size: number;
   type: string;
   dateAdded: number;
-  data: ArrayBuffer;
+  data: Blob;
+  password?: string; // Saved password for auto-unlock
 }
 
 export interface ArchiveImage {

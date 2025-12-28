@@ -1,5 +1,5 @@
 
-import { ArchiveFile } from '../types';
+import { ArchiveFile } from '../types.ts';
 
 const DB_NAME = 'ZipViewerDB';
 const STORE_NAME = 'archives';
