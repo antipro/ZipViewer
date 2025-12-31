@@ -18,6 +18,16 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        // Optimize for production builds
+        target: 'es2015',
+        minify: 'esbuild',
+        rollupOptions: {
+          output: {
+            manualChunks: undefined,
+          }
+        }
       }
     };
 });

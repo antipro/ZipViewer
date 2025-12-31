@@ -7,15 +7,65 @@ A secure, offline-first web application for viewing images directly from encrypt
 - **Encrypted Archives**: Full support for password-protected ZIP files using `@zip.js/zip.js`.
 - **Mobile Optimized**: Smooth pinch-to-zoom, panning, and swipe navigation.
 - **Desktop Ready**: Keyboard shortcuts and high-performance rendering.
+- **Local Dependencies**: All dependencies are bundled locally - no external CDN dependencies (except Google Fonts).
 
-## Mobile APK Build Instructions (No NPM Dependencies)
+## Development Setup
+
+### Prerequisites
+- Node.js 16 or higher
+- npm or yarn
+
+### Installation
+
+```bash
+# Install dependencies
+npm install --legacy-peer-deps
+
+# Start development server
+npm run dev
+
+# Build for production (web)
+npm run build
+
+# Build for Android (with relative paths)
+npm run build:android
+```
+
+### Project Structure
+- All React, React-DOM, Framer Motion, Lucide React, and @zip.js/zip.js dependencies are bundled locally
+- Tailwind CSS is processed at build time (no CDN)
+- Built assets are completely self-contained in the `dist` folder
+
+## Building for Android
+
+This project can be compiled into an Android app using Android Studio's WebView. All dependencies are now local, making it suitable for offline Android apps.
+
+### Quick Start for Android Build
+
+1. **Build the web application:**
+   ```bash
+   npm run build:android
+   ```
+   This creates a `dist` folder with all assets using relative paths.
+
+2. **Follow the Android Studio setup instructions below** to wrap the web app in a WebView.
+
+## Mobile APK Build Instructions
 
 This method uses a standard Android Studio project to wrap your web code. It requires no changes to your web project's configuration and keeps the build process completely separate.
 
 ### 1. Prepare Your Web Assets
-Ensure your web application is compiled into standard HTML/JS/CSS.
-* **Important**: Android WebViews cannot natively execute `.tsx` or JSX files. You must transpile your code (e.g., `vite build`, `tsc`, or `esbuild`) before packaging.
-* **Offline Support**: If you want the app to work offline, you must download the dependencies currently loaded from `esm.sh` in `index.html` and link them locally.
+Build your web application using:
+```bash
+npm run build:android
+```
+
+This will:
+- Compile all TypeScript/JSX files into standard JavaScript
+- Bundle all dependencies locally (React, Framer Motion, Lucide React, @zip.js/zip.js)
+- Process Tailwind CSS and include it in the build
+- Generate optimized production assets in the `dist` folder
+- Use relative paths (`./assets/...`) for Android compatibility
 
 ### 2. Create Android Project
 1. Open **Android Studio**.
