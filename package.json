@@ -12,8 +12,7 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "framer-motion": "10.18.0",
-    "lucide-react": "0.460.0",
-    "node-unrar-js": "2.0.2"
+    "lucide-react": "0.460.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

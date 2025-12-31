@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, 
@@ -21,7 +20,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArchiveFile, ArchiveImage, ViewMode } from './types.ts';
 import { saveArchive, getAllArchives, deleteArchive } from './services/dbService.ts';
-import { extractImagesFromZip, extractImagesFromRar, getArchiveType, checkEncryption } from './services/archiveService.ts';
+import { extractImagesFromZip, getArchiveType, checkEncryption } from './services/archiveService.ts';
 import ImageViewer from './components/ImageViewer.tsx';
 
 const App: React.FC = () => {
@@ -91,10 +90,9 @@ const App: React.FC = () => {
   const openArchive = async (archive: ArchiveFile) => {
     const lowerName = archive.name.toLowerCase();
     const isZip = lowerName.endsWith('.zip');
-    const isRar = lowerName.endsWith('.rar');
     
-    if (!isZip && !isRar) {
-      alert(`Unsupported Format: ${archive.name}. Currently only ZIP and RAR viewing is supported.`);
+    if (!isZip) {
+      alert(`Unsupported Format: ${archive.name}. Currently only ZIP viewing is supported.`);
       return;
     }
 
@@ -107,9 +105,7 @@ const App: React.FC = () => {
       // If encrypted and we have a saved password, try it immediately
       if (isEncrypted && archive.password) {
         try {
-          const images = isZip 
-            ? await extractImagesFromZip(archive.data, archive.password) 
-            : await extractImagesFromRar(archive.data, archive.password);
+          const images = await extractImagesFromZip(archive.data, archive.password);
           setCurrentImages(images);
           setIsExtracting(false);
           return;
@@ -125,16 +121,14 @@ const App: React.FC = () => {
         return;
       }
 
-      const images = isZip 
-        ? await extractImagesFromZip(archive.data) 
-        : await extractImagesFromRar(archive.data);
+      const images = await extractImagesFromZip(archive.data);
       setCurrentImages(images);
     } catch (error: any) {
       console.error("Extraction error:", error);
       if (error.message === "ENCRYPTED") {
         setShowPasswordDialog(true);
       } else if (error.message === "NOT_A_ZIP") {
-        alert('Format Error: This file structure is invalid or not a supported archive.');
+        alert('Format Error: This file structure is invalid or not a supported ZIP archive.');
         setActiveFile(null);
       } else {
         alert(`Extraction failed: ${error.message || 'The file might be corrupted.'}`);
@@ -150,10 +144,7 @@ const App: React.FC = () => {
     setIsExtracting(true);
     setShowPasswordDialog(false);
     try {
-      const isZip = activeFile.name.toLowerCase().endsWith('.zip');
-      const images = isZip 
-        ? await extractImagesFromZip(activeFile.data, password)
-        : await extractImagesFromRar(activeFile.data, password);
+      const images = await extractImagesFromZip(activeFile.data, password);
       
       // Save password for future use
       const updatedFile = { ...activeFile, password };
@@ -290,7 +281,7 @@ const App: React.FC = () => {
         ref={fileInputRef} 
         onChange={handleFileUpload} 
         className="hidden" 
-        accept=".zip,.rar"
+        accept=".zip"
       />
 
       <main className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 no-scrollbar">
@@ -327,11 +318,11 @@ const App: React.FC = () => {
                   <div className="text-center space-y-2 mb-8">
                     <h2 className="text-xl font-bold text-slate-200">The Vault is Empty</h2>
                     <p className="text-slate-500 text-sm max-w-[280px] mx-auto leading-relaxed">
-                      Import ZIP or RAR files. Images are processed locally and never touch the cloud.
+                      Import ZIP files. Images are processed locally and never touch the cloud.
                     </p>
                   </div>
                   <div className="flex items-center gap-2 px-6 py-3 bg-indigo-600 rounded-2xl font-bold text-sm shadow-xl shadow-indigo-500/20">
-                    <Plus size={18} /> Select Archive
+                    <Plus size={18} /> Select ZIP Archive
                   </div>
                 </div>
               ) : (
@@ -423,7 +414,7 @@ const App: React.FC = () => {
                         <AlertCircle size={32} />
                       </div>
                       <p className="text-slate-500 max-w-xs leading-relaxed">
-                        No supported image formats (.jpg, .png, .webp, etc.) were found in this archive.
+                        No supported image formats (.jpg, .png, .webp, etc.) were found in this ZIP archive.
                       </p>
                     </div>
                   ) : (
@@ -497,7 +488,7 @@ const App: React.FC = () => {
               </div>
               <div className="text-center space-y-2">
                 <h2 className="text-xl font-bold">Encrypted Archive</h2>
-                <p className="text-slate-400 text-sm leading-relaxed">This file is password protected. Enter the key to view its contents.</p>
+                <p className="text-slate-400 text-sm leading-relaxed">This ZIP file is password protected. Enter the key to view its contents.</p>
               </div>
               <input 
                 type="password"
@@ -542,7 +533,7 @@ const App: React.FC = () => {
               <div className="text-center space-y-2">
                 <h2 className="text-xl font-bold">Delete Archive?</h2>
                 <p className="text-slate-400 text-sm leading-relaxed">
-                  This action cannot be undone. The file will be permanently removed from your private vault.
+                  This action cannot be undone. The ZIP file will be permanently removed from your private vault.
                 </p>
               </div>
               <div className="flex gap-3">
@@ -580,7 +571,7 @@ const App: React.FC = () => {
                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">End-to-End Local Privacy</span>
              </div>
              <p className="text-[10px] text-slate-600 text-center sm:text-right max-w-xs leading-relaxed">
-               All archives stay in your browser's internal storage. We never upload your data.
+               All ZIP archives stay in your browser's internal storage. We never upload your data.
              </p>
           </div>
         </footer>
